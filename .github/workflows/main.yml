@@ -1,0 +1,35 @@
+name: Security Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Instalar Dependências
+        run: composer install --no-progress --no-suggest
+
+      - name: Rodar Verificação de Segurança (Wapiti)
+        run: |
+          sudo apt update
+          sudo apt install wapiti -y
+          wapiti -u http://localhost/dvwa/login.php -m xss,csrf
+
+      - name: Rodar DeepCode para sugestões
+        run: |
+          npx @snyk/code test --all-projects
